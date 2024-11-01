@@ -23,6 +23,7 @@ class FrameDisplay(BasePlugin):
         "Frame width": 960,
         "Frame height": 720,
         "Aspect ratio": {"Keep": True, "Ignore": False},
+        "Fixed Interval": 0,
     }
 
     def __init__(self, cam_widget, config, queue_size=0):
@@ -30,6 +31,7 @@ class FrameDisplay(BasePlugin):
 
         self.frame_width = config.get("Frame width")
         self.frame_height = config.get("Frame height")
+        self.interval = config.get("Fixed Interval")
         cam_widget.resize(self.frame_width, self.frame_height)
 
         self.signal = DisplaySignal()
@@ -38,25 +40,28 @@ class FrameDisplay(BasePlugin):
     def process(self, frame, metadata):
         """Sets pixmap image to video frame"""
         # Get image dimensions
-        img_h, img_w, num_ch = frame.shape
+        self.interval = max(0,self.interval-1)
+        if self.interval == 0:
+            img_h, img_w, num_ch = frame.shape
 
-        # Convert to pixmap and set to video frame
-        bytes_per_line = num_ch * img_w
-        qt_image = QtGui.QImage(
-            frame.data, img_w, img_h, bytes_per_line, QtGui.QImage.Format.Format_RGB888
-        )
-        if self.config.get("Aspect ratio"):
-            qt_image = qt_image.scaled(
-                self.frame_width, self.frame_height, Qt.AspectRatioMode.KeepAspectRatio
+            # Convert to pixmap and set to video frame
+            bytes_per_line = num_ch * img_w
+            qt_image = QtGui.QImage(
+                frame.data, img_w, img_h, bytes_per_line, QtGui.QImage.Format.Format_RGB888
             )
-        else:
-            qt_image = qt_image.scaled(
-                self.frame_width,
-                self.frame_height,
-                Qt.AspectRatioMode.IgnoreAspectRatio,
-            )
+            if self.config.get("Aspect ratio"):
+                qt_image = qt_image.scaled(
+                    self.frame_width, self.frame_height, Qt.AspectRatioMode.KeepAspectRatio
+                )
+            else:
+                qt_image = qt_image.scaled(
+                    self.frame_width,
+                    self.frame_height,
+                    Qt.AspectRatioMode.IgnoreAspectRatio,
+                )
 
-        self.signal.image.emit(qt_image)
+            self.signal.image.emit(qt_image)
+            self.interval = self.config.get("Fixed Interval")
 
         return frame, metadata
 

@@ -16,8 +16,8 @@ class PiCamera(BaseCamera):
     DEFAULT_PROPS = {
         "Framerate": 30,
         "Buffer Size": 10,
-        "Height": 1280,
-        "Width": 720, 
+        "Width": 1280,
+        "Height": 720, 
     }
 
     @staticmethod
@@ -44,10 +44,11 @@ class PiCamera(BaseCamera):
             "FrameRate": self.fps,
         }
         sensor_props = {
-            "output_size": (prop_config.get("Height"), prop_config.get("Width")),
+            "output_size": (prop_config.get("Width"), prop_config.get("Height")),
         }
 
-        video_config = self._stream.create_video_configuration(buffer_count=prop_config.get("Buffer Size"),
+        video_config = self._stream.create_video_configuration(main = {"format": "XRGB8888"},
+                                                               buffer_count=prop_config.get("Buffer Size"),
                                                                controls=controls, sensor=sensor_props)
         self._stream.configure(video_config)
 
